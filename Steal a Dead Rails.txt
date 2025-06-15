@@ -1,0 +1,697 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2759
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 local Players = game:GetService("Players")\
+local UserInputService = game:GetService("UserInputService")\
+local RunService = game:GetService("RunService")\
+\
+-- Wait for player to load properly\
+local player = Players.LocalPlayer\
+if not player then\
+    player = Players:WaitForChild("LocalPlayer", 10)\
+end\
+\
+-- Additional safety check\
+if not player then\
+    warn("Failed to get LocalPlayer!")\
+    return\
+end\
+\
+local username = player.Name\
+\
+-- Create ScreenGui\
+local screenGui = Instance.new("ScreenGui")\
+screenGui.Name = "TeleportAndActivateGUI"\
+\
+-- Wait for PlayerGui to be available\
+local playerGui = player:WaitForChild("PlayerGui", 10)\
+if not playerGui then\
+    warn("PlayerGui not found!")\
+    return\
+end\
+\
+screenGui.Parent = playerGui\
+\
+-- Create a main frame to hold all buttons (made taller for nuker button)\
+local mainFrame = Instance.new("Frame")\
+mainFrame.Size = UDim2.new(0, 220, 0, 300) -- Made taller for nuker button\
+mainFrame.Position = UDim2.new(0, 20, 0, 20)\
+mainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)\
+mainFrame.BorderSizePixel = 2\
+mainFrame.BorderColor3 = Color3.fromRGB(100, 100, 100)\
+mainFrame.Parent = screenGui\
+\
+-- Make the frame draggable\
+local dragging = false\
+local dragStart = nil\
+local startPos = nil\
+\
+local function updateInput(input)\
+    local delta = input.Position - dragStart\
+    mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)\
+end\
+\
+mainFrame.InputBegan:Connect(function(input)\
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then\
+        dragging = true\
+        dragStart = input.Position\
+        startPos = mainFrame.Position\
+        \
+        input.Changed:Connect(function()\
+            if input.UserInputState == Enum.UserInputState.End then\
+                dragging = false\
+            end\
+        end)\
+    end\
+end)\
+\
+mainFrame.InputChanged:Connect(function(input)\
+    if input.UserInputType == Enum.UserInputType.MouseMovement and dragging then\
+        updateInput(input)\
+    end\
+end)\
+\
+-- Close Button (X button in top-right corner)\
+local closeButton = Instance.new("TextButton")\
+closeButton.Size = UDim2.new(0, 25, 0, 25)\
+closeButton.Position = UDim2.new(1, -30, 0, 5)\
+closeButton.BackgroundColor3 = Color3.fromRGB(255, 70, 70)\
+closeButton.TextColor3 = Color3.new(1, 1, 1)\
+closeButton.Font = Enum.Font.SourceSansBold\
+closeButton.TextSize = 18\
+closeButton.Text = "X"\
+closeButton.Parent = mainFrame\
+\
+-- Button 1: Teleport\
+local teleportButton = Instance.new("TextButton")\
+teleportButton.Size = UDim2.new(0, 200, 0, 40)\
+teleportButton.Position = UDim2.new(0, 10, 0, 35)\
+teleportButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)\
+teleportButton.TextColor3 = Color3.new(1,1,1)\
+teleportButton.Font = Enum.Font.SourceSansBold\
+teleportButton.TextSize = 20\
+teleportButton.Text = "Teleport & Return"\
+teleportButton.Parent = mainFrame\
+\
+-- Button 2: Noclip Toggle Button\
+local noclipButton = Instance.new("TextButton")\
+noclipButton.Size = UDim2.new(0, 200, 0, 40)\
+noclipButton.Position = UDim2.new(0, 10, 0, 85)\
+noclipButton.BackgroundColor3 = Color3.fromRGB(120, 120, 120)\
+noclipButton.TextColor3 = Color3.new(1,1,1)\
+noclipButton.Font = Enum.Font.SourceSansBold\
+noclipButton.TextSize = 20\
+noclipButton.Text = "Noclip: OFF"\
+noclipButton.Parent = mainFrame\
+\
+-- Button 3: Auto-Teleport Toggle\
+local autoTeleportButton = Instance.new("TextButton")\
+autoTeleportButton.Size = UDim2.new(0, 200, 0, 40)\
+autoTeleportButton.Position = UDim2.new(0, 10, 0, 135)\
+autoTeleportButton.BackgroundColor3 = Color3.fromRGB(120, 120, 120)\
+autoTeleportButton.TextColor3 = Color3.new(1,1,1)\
+autoTeleportButton.Font = Enum.Font.SourceSansBold\
+autoTeleportButton.TextSize = 18\
+autoTeleportButton.Text = "Auto-Teleport: OFF"\
+autoTeleportButton.Parent = mainFrame\
+\
+-- Button 4: Nuker Toggle\
+local nukerButton = Instance.new("TextButton")\
+nukerButton.Size = UDim2.new(0, 200, 0, 40)\
+nukerButton.Position = UDim2.new(0, 10, 0, 185)\
+nukerButton.BackgroundColor3 = Color3.fromRGB(120, 120, 120)\
+nukerButton.TextColor3 = Color3.new(1,1,1)\
+nukerButton.Font = Enum.Font.SourceSansBold\
+nukerButton.TextSize = 20\
+nukerButton.Text = "Nuker: OFF"\
+nukerButton.Parent = mainFrame\
+\
+-- Button 5: ESP Toggle\
+local espButton = Instance.new("TextButton")\
+espButton.Size = UDim2.new(0, 200, 0, 40)\
+espButton.Position = UDim2.new(0, 10, 0, 235) -- Below Nuker\
+espButton.BackgroundColor3 = Color3.fromRGB(120, 120, 120)\
+espButton.TextColor3 = Color3.new(1,1,1)\
+espButton.Font = Enum.Font.SourceSansBold\
+espButton.TextSize = 20\
+espButton.Text = "ESP: OFF"\
+espButton.Parent = mainFrame\
+\
+-- Auto-teleport toggle variables\
+local autoTeleportEnabled = false\
+local autoTeleportConnection = nil\
+local lastTimeCheck = nil\
+local cooldownActive = false\
+\
+-- Noclip toggle variables\
+local noclipEnabled = false\
+local noclipConnection = nil\
+\
+-- Nuker toggle variables\
+local nukerEnabled = false\
+local nukerConnection = nil\
+local nukerSpecialConnection = nil\
+local proximityConnections = \{\}\
+\
+-- Function to find your tycoon from Tycoon1 to Tycoon8\
+local function findMyTycoon()\
+    for i = 1, 8 do\
+        local tycoonModel = workspace.Map.Tycoons:FindFirstChild("Tycoon"..i)\
+        if tycoonModel then\
+            local label = tycoonModel:FindFirstChild("Tycoon") and\
+                          tycoonModel.Tycoon:FindFirstChild("Board") and\
+                          tycoonModel.Tycoon.Board:FindFirstChild("Board") and\
+                          tycoonModel.Tycoon.Board.Board:FindFirstChild("SurfaceGui") and\
+                          tycoonModel.Tycoon.Board.Board.SurfaceGui:FindFirstChild("Username")\
+\
+            if label and label.Text == username then\
+                return tycoonModel\
+            end\
+        end\
+    end\
+    return nil\
+end\
+\
+-- Function to get ForceField time from screen\
+local function getForceFieldTime()\
+    local myTycoon = findMyTycoon()\
+    if not myTycoon then\
+        return nil\
+    end\
+\
+    local timeLabel = myTycoon:FindFirstChild("Tycoon") and\
+                      myTycoon.Tycoon:FindFirstChild("ForcefieldFolder") and\
+                      myTycoon.Tycoon.ForcefieldFolder:FindFirstChild("Screen") and\
+                      myTycoon.Tycoon.ForcefieldFolder.Screen:FindFirstChild("Screen") and\
+                      myTycoon.Tycoon.ForcefieldFolder.Screen.Screen:FindFirstChild("SurfaceGui") and\
+                      myTycoon.Tycoon.ForcefieldFolder.Screen.Screen.SurfaceGui:FindFirstChild("Time")\
+\
+    if timeLabel then\
+        return timeLabel.Text\
+    else\
+        return nil\
+    end\
+end\
+\
+-- Function to enable/disable noclip\
+local function setNoclip(enabled)\
+    local character = player.Character\
+    if not character then return end\
+    \
+    for _, part in pairs(character:GetChildren()) do\
+        if part:IsA("BasePart") then\
+            part.CanCollide = not enabled\
+        end\
+    end\
+end\
+\
+-- Special item detection and teleportation functions (from second script)\
+local function updateCharacter()\
+    local c = player.Character or player.CharacterAdded:Wait()\
+    local hrp = c:WaitForChild("HumanoidRootPart")\
+    return c, hrp\
+end\
+\
+local function findSpecial(t)\
+    local temp = t:FindFirstChild("Temporary")\
+    local timeGui = t.Tycoon.ForcefieldFolder.Screen.Screen.SurfaceGui:FindFirstChild("Time")\
+    local timeText = timeGui and timeGui.Text or "N/A"\
+\
+    local maxPrice, maxItem, maxRarity = 0, nil, nil\
+    if not temp then return nil, timeText end\
+\
+    for _, i in pairs(temp:GetChildren()) do\
+        local info = i:FindFirstChild("TrashInfo")\
+        if info then\
+            local priceL = info:FindFirstChild("Price")\
+            local rarityL = info:FindFirstChild("Rarity")\
+            if priceL and rarityL then\
+                local text = priceL.Text or ""\
+                local digitsOnly = text:gsub("[^%d]", "")\
+                local prc = tonumber(digitsOnly)\
+                if prc and prc > maxPrice then\
+                    maxPrice = prc\
+                    maxItem = i\
+                    maxRarity = rarityL.Text\
+                end\
+            end\
+        end\
+    end\
+\
+    return maxItem, maxPrice, maxRarity, timeText\
+end\
+\
+local function setupPrompt(p)\
+    if p:IsA("ProximityPrompt") and nukerEnabled then\
+        p.RequiresLineOfSight = false\
+        p.MaxActivationDistance = 5\
+        p.HoldDuration = 0\
+        \
+        local connection = task.spawn(function()\
+            while p:IsDescendantOf(game) and p.Enabled and nukerEnabled do\
+                if nukerEnabled then\
+                    fireproximityprompt(p)\
+                end\
+                task.wait()\
+            end\
+        end)\
+        \
+        table.insert(proximityConnections, connection)\
+    end\
+end\
+\
+-- Function to perform nuker action (special item detection and teleportation)\
+local function performNuker()\
+    local c, hrp = updateCharacter()\
+    if not c or not hrp or not c.Parent then\
+        return\
+    end\
+\
+    local myTycoon = findMyTycoon()\
+    if not myTycoon then\
+        warn("Your tycoon not found for nuker!")\
+        return\
+    end\
+\
+    local myTycoonName = myTycoon.Name\
+    local camera = workspace.CurrentCamera\
+    local tycoons = workspace.Map.Tycoons\
+    local foundSpecial = false\
+\
+    -- Check all other tycoons for special items\
+    for _, t in pairs(tycoons:GetChildren()) do\
+        local tycoonName = t.Name\
+        if tycoonName ~= myTycoonName then\
+            local item, price, rarity, timeText = findSpecial(t)\
+\
+            if (rarity == "Mythic" or rarity == "Legendary" or rarity == "Cosmic") then\
+                print(tycoonName .. " | Time: '" .. timeText .. "' | MaxPrice: " .. (price or "N/A") .. " | Rarity: " .. (rarity or "N/A"))\
+            end\
+\
+            local timeClean = timeText:gsub("%s+", "")\
+\
+            if item and (rarity == "Mythic" or rarity == "Legendary" or rarity == "Cosmic") and (timeClean == "0sec") then\
+                print("FOUND SPECIAL: " .. tycoonName .. " | Time: '" .. timeText .. "' | MaxPrice: " .. (price or "N/A") .. " | Rarity: " .. (rarity or "N/A"))\
+                local targetPart = item:FindFirstChildWhichIsA("BasePart")\
+                if targetPart then\
+                    print("TP to special item in " .. tycoonName)\
+                    camera.CFrame = CFrame.new(item.WorldPivot.Position, item.WorldPivot.Position)\
+                    hrp.CFrame = targetPart.CFrame + Vector3.new(0, -1, 0)\
+                    \
+                    foundSpecial = true\
+                    task.wait(2)\
+                    camera.CameraType = Enum.CameraType.Custom\
+                    break\
+                end\
+            end\
+        end\
+    end\
+\
+    -- If no special item found, return to forcefield button\
+    if not foundSpecial then\
+        local btn = myTycoon.Tycoon.ForcefieldFolder.Buttons.ForceFieldBuy\
+        if btn and btn.WorldPivot then\
+            hrp.CFrame = CFrame.new(btn.WorldPivot.Position + Vector3.new(0, 3, 0))\
+            camera.CameraType = Enum.CameraType.Custom\
+        end\
+    end\
+end\
+\
+-- Function to toggle nuker mode\
+local function toggleNuker()\
+    nukerEnabled = not nukerEnabled\
+    \
+    if nukerEnabled then\
+        -- Turn ON nuker mode\
+        nukerButton.Text = "Nuker: ON"\
+        nukerButton.BackgroundColor3 = Color3.fromRGB(255, 100, 100)\
+        print("Nuker mode enabled! Scanning for special items...")\
+        \
+        -- Enable noclip automatically\
+        setNoclip(true)\
+        \
+        -- Clear previous connections\
+        proximityConnections = \{\}\
+        \
+        -- Setup proximity prompts\
+        for _, p in ipairs(workspace:GetDescendants()) do \
+            setupPrompt(p) \
+        end\
+        \
+        -- Connect for new prompts\
+        nukerSpecialConnection = workspace.DescendantAdded:Connect(function(descendant)\
+            if nukerEnabled then\
+                setupPrompt(descendant)\
+            end\
+        end)\
+        \
+        -- Start nuker loop (special item detection)\
+        nukerConnection = task.spawn(function()\
+            while nukerEnabled do\
+                if nukerEnabled then -- Double check\
+                    performNuker()\
+                end\
+                task.wait(0.1) -- Check every 0.1 seconds\
+            end\
+        end)\
+        \
+    else\
+        -- Turn OFF nuker mode\
+        nukerButton.Text = "Nuker: OFF"\
+        nukerButton.BackgroundColor3 = Color3.fromRGB(120, 120, 120)\
+        print("Nuker mode disabled!")\
+        \
+        -- Disable noclip\
+        setNoclip(false)\
+        \
+        -- Stop all proximity prompt connections\
+        for _, connection in pairs(proximityConnections) do\
+            if connection then\
+                task.cancel(connection)\
+            end\
+        end\
+        proximityConnections = \{\}\
+        \
+        -- Stop descendant connection\
+        if nukerSpecialConnection then\
+            nukerSpecialConnection:Disconnect()\
+            nukerSpecialConnection = nil\
+        end\
+        \
+        -- Stop nuker loop\
+        if nukerConnection then\
+            task.cancel(nukerConnection)\
+            nukerConnection = nil\
+        end\
+        \
+        print("All nuker loops stopped!")\
+    end\
+end\
+\
+-- Function to toggle noclip mode\
+local function toggleNoclip()\
+    noclipEnabled = not noclipEnabled\
+    \
+    if noclipEnabled then\
+        -- Turn ON noclip mode\
+        noclipButton.Text = "Noclip: ON"\
+        noclipButton.BackgroundColor3 = Color3.fromRGB(0, 200, 100)\
+        print("Noclip mode enabled!")\
+        \
+        -- Enable noclip\
+        setNoclip(true)\
+        \
+        -- Start noclip maintenance loop\
+        noclipConnection = RunService.Heartbeat:Connect(function()\
+            setNoclip(true)\
+        end)\
+        \
+    else\
+        -- Turn OFF noclip mode\
+        noclipButton.Text = "Noclip: OFF"\
+        noclipButton.BackgroundColor3 = Color3.fromRGB(120, 120, 120)\
+        print("Noclip mode disabled!")\
+        \
+        -- Disable noclip\
+        setNoclip(false)\
+        \
+        -- Stop connection\
+        if noclipConnection then\
+            noclipConnection:Disconnect()\
+            noclipConnection = nil\
+        end\
+    end\
+end\
+\
+-- Teleport function (teleport to button and back)\
+local function teleportToMyForcefield()\
+    local myTycoon = findMyTycoon()\
+    if not myTycoon then\
+        warn("Your tycoon not found!")\
+        return\
+    end\
+\
+    local lock = myTycoon:FindFirstChild("Tycoon") and\
+                 myTycoon.Tycoon:FindFirstChild("ForcefieldFolder") and\
+                 myTycoon.Tycoon.ForcefieldFolder:FindFirstChild("Buttons") and\
+                 myTycoon.Tycoon.ForcefieldFolder.Buttons:FindFirstChild("ForceFieldBuy") and\
+                 myTycoon.Tycoon.ForcefieldFolder.Buttons.ForceFieldBuy:FindFirstChild("Lock") and\
+                 myTycoon.Tycoon.ForcefieldFolder.Buttons.ForceFieldBuy.Lock:FindFirstChild("Lock")\
+\
+    local char = player.Character or player.CharacterAdded:Wait()\
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")\
+\
+    if hrp and lock then\
+        -- Save current position\
+        local originalPosition = hrp.CFrame\
+        print("Saved original position!")\
+        \
+        -- Teleport to ForceField button\
+        hrp.CFrame = lock.CFrame + Vector3.new(0, 5, 0)\
+        print("Teleported to your ForceField lock!")\
+        \
+        -- Wait 0.5 seconds then teleport back (updated from 3 seconds like in script 2)\
+        wait(0.5)\
+        hrp.CFrame = originalPosition\
+        print("Teleported back to original position!")\
+    else\
+        warn("HumanoidRootPart or Lock not found!")\
+    end\
+end\
+\
+-- Function to perform auto-teleport action\
+local function performAutoTeleport()\
+    if cooldownActive then\
+        return\
+    end\
+    \
+    cooldownActive = true\
+    print("ForceField time reached 0! Auto-teleporting...")\
+    \
+    -- Save current position before teleporting\
+    local char = player.Character\
+    if not char then\
+        cooldownActive = false\
+        return\
+    end\
+    \
+    local hrp = char:FindFirstChild("HumanoidRootPart")\
+    if not hrp then\
+        cooldownActive = false\
+        return\
+    end\
+    \
+    local originalPosition = hrp.CFrame\
+    print("Saved original position for auto-teleport!")\
+    \
+    -- Find tycoon and teleport\
+    local myTycoon = findMyTycoon()\
+    if myTycoon then\
+        local lock = myTycoon:FindFirstChild("Tycoon") and\
+                     myTycoon.Tycoon:FindFirstChild("ForcefieldFolder") and\
+                     myTycoon.Tycoon.ForcefieldFolder:FindFirstChild("Buttons") and\
+                     myTycoon.Tycoon.ForcefieldFolder.Buttons:FindFirstChild("ForceFieldBuy") and\
+                     myTycoon.Tycoon.ForcefieldFolder.Buttons.ForceFieldBuy:FindFirstChild("Lock") and\
+                     myTycoon.Tycoon.ForcefieldFolder.Buttons.ForceFieldBuy.Lock:FindFirstChild("Lock")\
+\
+        if lock then\
+            -- Start looping teleport to stay on button (using improved version from script 2)\
+            spawn(function()\
+                local teleportLoop = true\
+                local endTime = tick() + 1 -- 1 second duration\
+                \
+                while teleportLoop and tick() < endTime do\
+                    if hrp and hrp.Parent then\
+                        hrp.CFrame = lock.CFrame + Vector3.new(0, 5, 0)\
+                    end\
+                    wait(0.3) -- Loop every 0.1 seconds\
+                end\
+                \
+                -- Return to original position after 1 second\
+                if hrp and hrp.Parent then\
+                    hrp.CFrame = originalPosition\
+                    print("Auto-teleported back to original position!")\
+                end\
+                \
+                -- Set cooldown for 10 seconds to prevent spam\
+                wait(10)\
+                cooldownActive = false\
+                print("Auto-teleport cooldown finished")\
+            end)\
+        else\
+            cooldownActive = false\
+        end\
+    else\
+        cooldownActive = false\
+    end\
+end\
+\
+-- Function to toggle auto-teleport\
+local function toggleAutoTeleport()\
+    autoTeleportEnabled = not autoTeleportEnabled\
+    \
+    if autoTeleportEnabled then\
+        -- Turn ON auto-teleport\
+        autoTeleportButton.Text = "Auto-Teleport: ON"\
+        autoTeleportButton.BackgroundColor3 = Color3.fromRGB(0, 200, 100)\
+        print("Auto-teleport enabled! Will teleport when ForceField time = 0")\
+        \
+        -- Start monitoring the time\
+        autoTeleportConnection = RunService.Heartbeat:Connect(function()\
+            local currentTime = getForceFieldTime()\
+            if currentTime then\
+                -- Check if time is "0" or "00:00" or similar zero values\
+                local timeStr = tostring(currentTime):lower():gsub("%s+", "") -- Remove spaces and convert to lowercase\
+                \
+                -- More comprehensive zero checking\
+                local isZero = timeStr == "0" or \
+                              timeStr == "00:00" or \
+                              timeStr == "0:00" or \
+                              timeStr == "00" or\
+                              timeStr == "0s" or\
+                              timeStr == "0sec" or\
+                              timeStr == "0seconds"\
+                \
+                -- Only trigger if we transition from non-zero to zero (prevent spam)\
+                if isZero and lastTimeCheck ~= "0" then\
+                    lastTimeCheck = "0"\
+                    performAutoTeleport()\
+                elseif not isZero then\
+                    lastTimeCheck = currentTime\
+                end\
+            end\
+        end)\
+    else\
+        -- Turn OFF auto-teleport\
+        autoTeleportButton.Text = "Auto-Teleport: OFF"\
+        autoTeleportButton.BackgroundColor3 = Color3.fromRGB(120, 120, 120)\
+        print("Auto-teleport disabled!")\
+        \
+        -- Stop monitoring\
+        if autoTeleportConnection then\
+            autoTeleportConnection:Disconnect()\
+            autoTeleportConnection = nil\
+        end\
+        \
+        -- Reset variables\
+        lastTimeCheck = nil\
+        cooldownActive = false\
+    end\
+end\
+local espEnabled = false\
+local espConnections = \{\}\
+\
+-- ESP ON\
+local function enableESP()\
+    for _, obj in ipairs(workspace:GetDescendants()) do\
+        if obj:IsA("BasePart") and obj.Name:lower():find("ore") then\
+            -- Box ESP\
+            local adorn = Instance.new("BoxHandleAdornment")\
+            adorn.Adornee = obj\
+            adorn.AlwaysOnTop = true\
+            adorn.ZIndex = 5\
+            adorn.Size = obj.Size + Vector3.new(0.2, 0.2, 0.2)\
+            adorn.Color3 = Color3.fromRGB(255, 255, 0)\
+            adorn.Transparency = 0.5\
+            adorn.Parent = obj\
+            table.insert(espConnections, adorn)\
+\
+            -- Name Tag ESP\
+            local billboard = Instance.new("BillboardGui")\
+            billboard.Adornee = obj\
+            billboard.Size = UDim2.new(0, 100, 0, 30)\
+            billboard.StudsOffset = Vector3.new(0, obj.Size.Y + 0.5, 0)\
+            billboard.AlwaysOnTop = true\
+            billboard.Parent = obj\
+\
+            local label = Instance.new("TextLabel")\
+            label.Size = UDim2.new(1, 0, 1, 0)\
+            label.BackgroundTransparency = 1\
+            label.Text = obj.Name\
+            label.TextColor3 = Color3.fromRGB(255, 255, 255)\
+            label.TextStrokeTransparency = 0\
+            label.TextScaled = true\
+            label.Font = Enum.Font.SourceSansBold\
+            label.Parent = billboard\
+\
+            table.insert(espConnections, billboard)\
+        end\
+    end\
+end\
+\
+-- ESP OFF\
+local function disableESP()\
+    for _, ui in ipairs(espConnections) do\
+        if ui and ui.Parent then\
+            ui:Destroy()\
+        end\
+    end\
+    espConnections = \{\}\
+end\
+\
+-- TOGGLE ESP\
+local function toggleESP()\
+    espEnabled = not espEnabled\
+    if espEnabled then\
+        espButton.Text = "ESP: ON"\
+        espButton.BackgroundColor3 = Color3.fromRGB(0, 200, 255)\
+        print("ESP enabled")\
+        enableESP()\
+    else\
+        espButton.Text = "ESP: OFF"\
+        espButton.BackgroundColor3 = Color3.fromRGB(120, 120, 120)\
+        print("ESP disabled")\
+        disableESP()\
+    end\
+end\
+\
+\
+local function disableESP()\
+    for _, ui in ipairs(espConnections) do\
+        if ui and ui.Parent then\
+            ui:Destroy()\
+        end\
+    end\
+    espConnections = \{\}\
+end\
+\
+-- Close function\
+local function closeGUI()\
+    -- Clean up connections before destroying\
+    if autoTeleportConnection then\
+        autoTeleportConnection:Disconnect()\
+    end\
+    if noclipConnection then\
+        noclipConnection:Disconnect()\
+    end\
+    if nukerConnection then\
+        task.cancel(nukerConnection)\
+    end\
+    if nukerSpecialConnection then\
+        nukerSpecialConnection:Disconnect()\
+    end\
+    \
+    \
+    -- Stop all proximity prompt connections\
+    for _, connection in pairs(proximityConnections) do\
+        if connection then\
+            task.cancel(connection)\
+        end\
+    end\
+    disableESP()\
+    \
+    screenGui:Destroy()\
+    print("GUI closed!")\
+end\
+\
+-- Connect buttons\
+teleportButton.MouseButton1Click:Connect(teleportToMyForcefield)\
+noclipButton.MouseButton1Click:Connect(toggleNoclip)\
+autoTeleportButton.MouseButton1Click:Connect(toggleAutoTeleport)\
+nukerButton.MouseButton1Click:Connect(toggleNuker)\
+espButton.MouseButton1Click:Connect(toggleESP)\
+closeButton.MouseButton1Click:Connect(closeGUI)}
